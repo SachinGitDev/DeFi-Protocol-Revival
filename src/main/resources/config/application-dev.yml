@@ -35,7 +35,7 @@ spring:
       indent-output: true
   datasource:
     type: com.zaxxer.hikari.HikariDataSource
-    url: jdbc:postgresql://127.0.0.1:5433/deFiProtocolRevival
+    url: jdbc:postgresql://127.0.0.1:5434/deFiProtocolRevival
     username: deFiProtocolRevival
     password:
     hikari:

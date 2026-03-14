@@ -1,0 +1,19 @@
+entity SmartContract {
+  name String required,
+  githubUrl String,
+  originalCode TextBlob required,
+  resurrectedCode TextBlob,
+  isValidated Boolean
+}
+
+entity Vulnerability {
+  name String required,
+  description TextBlob,
+  severity String
+}
+
+relationship OneToMany {
+  SmartContract{vulnerabilities} to Vulnerability{contract}
+}
+
+service * with serviceClass

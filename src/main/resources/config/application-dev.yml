@@ -21,6 +21,10 @@ logging:
     com.mycompany.myapp: DEBUG
 
 spring:
+  ai:
+    google:
+      genai:
+        api-key: ${GEMINI_API_KEY}
   docker:
     compose:
       enabled: false
@@ -43,7 +47,7 @@ spring:
       auto-commit: false
   liquibase:
     # Remove 'faker' if you do not want the sample data to be loaded automatically
-    contexts: dev, faker
+    contexts: dev
   mail:
     host: localhost
     port: 25

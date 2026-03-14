@@ -1,33 +1,60 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Container, Row, Col, Input, Button, Card, CardBody, CardTitle, CardText, Form, FormGroup } from 'reactstrap';
+import { Container, Row, Col, Input, Button, Card, CardBody, CardTitle, CardText, Form, FormGroup, Spinner } from 'reactstrap';
+import axios from 'axios'; // <-- 1. Import Axios!
 
 export const Home = () => {
   const [githubUrl, setGithubUrl] = useState('');
+  const [isScanning, setIsScanning] = useState(false); // <-- 2. Add a loading state
   const navigate = useNavigate();
 
-  const handleAnalyse = event => {
+  const handleAnalyse = async event => {
     event.preventDefault();
     if (githubUrl.trim() === '') {
       alert('Please enter a valid GitHub URL first!');
       return;
     }
-    navigate(`/details?repo=${encodeURIComponent(githubUrl)}`);
+
+    // 3. Start the loading spinner
+    setIsScanning(true);
+
+    try {
+      // 4. Send the URL to Sachin's Backend!
+      const response = await axios.post('/api/scan-repository', {
+        githubUrl,
+      });
+
+      // The backend returns a list of processed contracts. We grab the first one.
+      const scannedContract = response.data[0];
+
+      if (scannedContract && scannedContract.id) {
+        // 5. SUCCESS! Navigate to the details page, passing the real Contract ID!
+        setIsScanning(false);
+        navigate(`/details?repo=${encodeURIComponent(githubUrl)}&contractId=${scannedContract.id}`);
+      } else {
+        alert('Scan completed, but no solidity files were found or processed.');
+        setIsScanning(false);
+      }
+    } catch (error) {
+      console.error('Backend scan failed:', error);
+      alert('Error connecting to the AI Engine. Check the console.');
+      setIsScanning(false);
+    }
   };
 
   return (
-    /* This wrapper div adds the greyish-white background to the whole page */
     <div style={{ backgroundColor: '#ffffff', minHeight: '100vh', paddingTop: '40px', paddingBottom: '40px' }}>
       <Container className="text-center">
+        {/* LOGO SECTION (I left Rahul's styles exactly as they were) */}
         <Row className="justify-content-center">
           <Col md="10" className="d-flex justify-content-center">
             <div
               style={{
                 backgroundColor: '#1a1d21',
-                padding: '20px 40px', // Reduced top/bottom padding to make it "smaller"
+                padding: '20px 40px',
                 borderRadius: '20px',
                 boxShadow: '0 10px 30px rgba(0,0,0,0.1)',
-                width: 'fit-content', // This makes the pod only as wide as the logo
+                width: 'fit-content',
                 display: 'flex',
                 justifyContent: 'center',
                 alignItems: 'center',
@@ -35,19 +62,12 @@ export const Home = () => {
                 marginTop: '20px',
               }}
             >
-              <img
-                src="content/images/DeFi_Logo_T.png"
-                alt="Revival Logo"
-                style={{
-                  width: 'auto',
-                  maxWidth: '450px', // Slightly smaller scale for a tighter fit
-                  height: 'auto',
-                }}
-              />
+              <img src="content/images/DeFi_Logo_T.png" alt="Revival Logo" style={{ width: 'auto', maxWidth: '450px', height: 'auto' }} />
             </div>
           </Col>
         </Row>
 
+        {/* INPUT SECTION */}
         <Row className="justify-content-center mb-5">
           <Col md="8">
             <Card className="p-4 shadow-sm" style={{ borderRadius: '15px' }}>
@@ -62,9 +82,10 @@ export const Home = () => {
                     value={githubUrl}
                     onChange={e => setGithubUrl(e.target.value)}
                     style={{ width: '60%', marginRight: '10px', borderRadius: '20px' }}
+                    disabled={isScanning} // <-- Disable input while scanning
                   />
-                  <Button color="primary" type="submit" style={{ borderRadius: '20px', padding: '0 30px' }}>
-                    Analyse
+                  <Button color="primary" type="submit" style={{ borderRadius: '20px', padding: '0 30px' }} disabled={isScanning}>
+                    {isScanning ? <Spinner size="sm" /> : 'Analyse'} {/* Show spinner if scanning */}
                   </Button>
                 </FormGroup>
               </Form>
@@ -72,6 +93,7 @@ export const Home = () => {
           </Col>
         </Row>
 
+        {/* INFO SECTION (Left exactly as Rahul wrote it) */}
         <Row className="justify-content-center">
           <Col md="8">
             <Card className="text-left bg-light shadow-sm" style={{ borderRadius: '15px' }}>
@@ -86,7 +108,6 @@ export const Home = () => {
                     misinformation in the comments of the code and the README file.
                   </CardText>
                 </div>
-
                 <div className="mb-4 text-start">
                   <CardTitle tag="h4" className="font-weight-bold">
                     Why Does It Matter?

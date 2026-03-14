@@ -1,20 +1,22 @@
 import React, { useState, useEffect } from 'react';
 import { Container, Row, Col, Spinner } from 'reactstrap';
 import { useLocation } from 'react-router-dom';
+import axios from 'axios'; // <-- 1. IMPORT AXIOS HERE
 
 export const Resurrect = () => {
   const location = useLocation();
   const contractId = new URLSearchParams(location.search).get('id') || 1001;
 
-  const [contractData, setContractData] = useState(null);
+  const [contractData, setContractData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     // 1. We create a fake delay for the "Resurrecting..." animation effect
     const animationTimer = new Promise(resolve => setTimeout(resolve, 3000));
 
-    // 2. We actually fetch the code from the backend
-    const fetchData = fetch(`/api/smart-contracts/${contractId}`).then(res => res.json());
+    // 2. We actually fetch the code from the backend using AXIOS
+    // Axios automatically attaches the JHipster security token!
+    const fetchData = axios.get(`/api/smart-contracts/${contractId}`).then(res => res.data);
 
     // Wait for BOTH the animation time and the data fetch to finish
     Promise.all([animationTimer, fetchData])

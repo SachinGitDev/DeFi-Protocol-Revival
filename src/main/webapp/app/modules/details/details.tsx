@@ -8,7 +8,7 @@ export const Details = () => {
   const repoUrl = new URLSearchParams(location.search).get('repo') || 'DeFi-Contract';
 
   // We will hardcode ID 1001 for the hackathon demo, but you can pass this dynamically later
-  const contractId = 1001;
+  const contractId = new URLSearchParams(location.search).get('contractId') || 1001;
 
   const [vulnerabilities, setVulnerabilities] = useState([]);
   const [loading, setLoading] = useState(true);

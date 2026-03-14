@@ -1,0 +1,42 @@
+{
+  "annotations": {
+    "changelogDate": "20260314155934"
+  },
+  "applications": "*",
+  "fields": [
+    {
+      "fieldName": "name",
+      "fieldType": "String",
+      "fieldValidateRules": ["required"]
+    },
+    {
+      "fieldName": "githubUrl",
+      "fieldType": "String"
+    },
+    {
+      "fieldName": "originalCode",
+      "fieldType": "TextBlob",
+      "fieldValidateRules": ["required"]
+    },
+    {
+      "fieldName": "resurrectedCode",
+      "fieldType": "TextBlob"
+    },
+    {
+      "fieldName": "isValidated",
+      "fieldType": "Boolean"
+    }
+  ],
+  "name": "SmartContract",
+  "relationships": [
+    {
+      "otherEntityName": "vulnerability",
+      "otherEntityRelationshipName": "contract",
+      "relationshipName": "vulnerabilities",
+      "relationshipSide": "left",
+      "relationshipType": "one-to-many"
+    }
+  ],
+  "searchEngine": "no",
+  "service": "serviceClass"
+}

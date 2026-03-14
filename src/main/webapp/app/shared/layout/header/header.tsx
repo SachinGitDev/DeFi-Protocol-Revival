@@ -41,13 +41,11 @@ const Header = (props: IHeaderProps) => {
 
   const toggleMenu = () => setMenuOpen(!menuOpen);
 
-  /* jhipster-needle-add-element-to-menu - JHipster will add new menu items here */
-
   return (
     <div id="app-header">
       {renderDevRibbon()}
       <LoadingBar className="loading-bar" />
-      <Navbar data-cy="navbar" dark expand="md" fixed="top" className="jh-navbar">
+      <Navbar data-cy="navbar" dark expand="md" fixed="top" className="jh-navbar" style={{ height: '65px', padding: '0 20px' }}>
         <NavbarToggler aria-label="Menu" onClick={toggleMenu} />
         <Brand />
         <Collapse isOpen={menuOpen} navbar>
@@ -56,7 +54,6 @@ const Header = (props: IHeaderProps) => {
             {props.isAuthenticated && <EntitiesMenu />}
             {props.isAuthenticated && props.isAdmin && <AdminMenu showOpenAPI={props.isOpenAPIEnabled} />}
             <LocaleMenu currentLocale={props.currentLocale} onClick={handleLocaleChange} />
-            <AccountMenu isAuthenticated={props.isAuthenticated} />
           </Nav>
         </Collapse>
       </Navbar>

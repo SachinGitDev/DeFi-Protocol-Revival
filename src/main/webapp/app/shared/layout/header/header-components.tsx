@@ -5,19 +5,35 @@ import { NavItem, NavLink, NavbarBrand } from 'reactstrap';
 import { NavLink as Link } from 'react-router-dom';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 
+// @ts-expect-error: TS doesn't recognize PNG imports natively
+import myLogo from '../../../../content/images/DeFi_Logo_T.png';
+
 export const BrandIcon = props => (
-  <div {...props} className="brand-icon">
-    <img src="content/images/logo-jhipster.png" alt="Logo" />
+  <div
+    {...props}
+    className="brand-icon"
+    style={{
+      display: 'flex',
+      alignItems: 'center',
+      height: '100%',
+      paddingLeft: '10px',
+    }}
+  >
+    <img
+      src="content/images/DeFi_Logo_T.png"
+      alt="Logo"
+      style={{
+        height: '80px',
+        width: 'auto',
+        objectFit: 'contain',
+      }}
+    />
   </div>
 );
 
 export const Brand = () => (
-  <NavbarBrand tag={Link} to="/" className="brand-logo">
+  <NavbarBrand tag={Link} to="/" className="brand-logo" style={{ height: '110px', display: 'flex', alignItems: 'center' }}>
     <BrandIcon />
-    <span className="brand-title">
-      <Translate contentKey="global.title">DeFiProtocolRevival</Translate>
-    </span>
-    <span className="navbar-version">{VERSION.toLowerCase().startsWith('v') ? VERSION : `v${VERSION}`}</span>
   </NavbarBrand>
 );
 

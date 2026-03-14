@@ -16,6 +16,10 @@ import ErrorBoundaryRoutes from 'app/shared/error/error-boundary-routes';
 import PageNotFound from 'app/shared/error/page-not-found';
 import { AUTHORITIES } from 'app/config/constants';
 
+import Results from './modules/results/results';
+import Resurrect from './modules/resurrect/resurrect';
+import Details from './modules/details/details';
+
 const loading = <div>loading ...</div>;
 
 const Account = Loadable({
@@ -32,6 +36,9 @@ const AppRoutes = () => {
     <div className="view-routes">
       <ErrorBoundaryRoutes>
         <Route index element={<Home />} />
+        <Route path="results" element={<Results />} />
+        <Route path="details" element={<Details />} />
+        <Route path="resurrect" element={<Resurrect />} />
         <Route path="login" element={<Login />} />
         <Route path="logout" element={<Logout />} />
         <Route path="account">

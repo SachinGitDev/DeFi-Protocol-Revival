@@ -21,6 +21,9 @@ logging:
     com.mycompany.myapp: DEBUG
 
 spring:
+  docker:
+    compose:
+      enabled: false
   devtools:
     restart:
       enabled: true
@@ -32,7 +35,7 @@ spring:
       indent-output: true
   datasource:
     type: com.zaxxer.hikari.HikariDataSource
-    url: jdbc:postgresql://localhost:5432/deFiProtocolRevival
+    url: jdbc:postgresql://127.0.0.1:5433/deFiProtocolRevival
     username: deFiProtocolRevival
     password:
     hikari:

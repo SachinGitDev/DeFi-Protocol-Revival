@@ -105,6 +105,7 @@ jhipster:
       host: localhost
       port: 5000
       ring-buffer-size: 512
+
 # ===================================================================
 # Application specific properties
 # Add your own application properties here, see the ApplicationProperties class
@@ -115,3 +116,7 @@ jhipster:
 # ===================================================================
 
 # application:
+
+hackathon:
+  github:
+    token: ${GITHUB_TOKEN}

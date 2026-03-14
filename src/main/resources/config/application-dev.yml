@@ -21,6 +21,13 @@ logging:
     com.mycompany.myapp: DEBUG
 
 spring:
+  ai:
+    google:
+      genai:
+        api-key: ${GEMINI_API_KEY}
+        chat:
+          options:
+            model: gemini-2.5-flash
   docker:
     compose:
       enabled: false
@@ -43,7 +50,7 @@ spring:
       auto-commit: false
   liquibase:
     # Remove 'faker' if you do not want the sample data to be loaded automatically
-    contexts: dev, faker
+    contexts: dev
   mail:
     host: localhost
     port: 25
@@ -98,6 +105,7 @@ jhipster:
       host: localhost
       port: 5000
       ring-buffer-size: 512
+
 # ===================================================================
 # Application specific properties
 # Add your own application properties here, see the ApplicationProperties class
@@ -108,3 +116,7 @@ jhipster:
 # ===================================================================
 
 # application:
+
+hackathon:
+  github:
+    token: ${GITHUB_TOKEN}

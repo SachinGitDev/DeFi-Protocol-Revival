@@ -30,6 +30,7 @@ export const Games = () => {
   const spawnTimeoutRef = useRef<any>(null);
   const levelIntervalRef = useRef<any>(null);
   const animFrameRef = useRef<any>(null);
+  const dvdAnimRef = useRef<any>(null);
 
   const endGame = useCallback(() => {
     gameRunningRef.current = false;
@@ -134,6 +135,61 @@ export const Games = () => {
     };
   }, []);
 
+  // DVD bouncer effect
+  useEffect(() => {
+    const container = document.getElementById('dvd-container');
+    const logo = document.getElementById('dvd-logo');
+    const flash = document.getElementById('corner-flash');
+    if (!container || !logo || !flash) return;
+
+    let x = 10,
+      y = 10,
+      dx = 2,
+      dy = 2;
+    const size = 60;
+
+    const colors = ['#ff6b00', '#ff0000', '#ffff00', '#00ff00', '#00ffff', '#ff00ff'];
+    let colorIdx = 0;
+
+    const step = () => {
+      const maxX = container.offsetWidth - size;
+      const maxY = container.offsetHeight - size;
+      x += dx;
+      y += dy;
+
+      let hitCorner = false;
+      if (x <= 0 || x >= maxX) {
+        dx = -dx;
+        x = Math.max(0, Math.min(x, maxX));
+        colorIdx = (colorIdx + 1) % colors.length;
+        logo.style.color = colors[colorIdx];
+        if ((x <= 2 || x >= maxX - 2) && (y <= 2 || y >= maxY - 2)) hitCorner = true;
+      }
+      if (y <= 0 || y >= maxY) {
+        dy = -dy;
+        y = Math.max(0, Math.min(y, maxY));
+        colorIdx = (colorIdx + 1) % colors.length;
+        logo.style.color = colors[colorIdx];
+        if ((x <= 2 || x >= maxX - 2) && (y <= 2 || y >= maxY - 2)) hitCorner = true;
+      }
+
+      logo.style.left = x + 'px';
+      logo.style.top = y + 'px';
+
+      if (hitCorner) {
+        flash.style.opacity = '1';
+        setTimeout(() => {
+          flash.style.opacity = '0';
+        }, 1500);
+      }
+
+      dvdAnimRef.current = requestAnimationFrame(step);
+    };
+
+    dvdAnimRef.current = requestAnimationFrame(step);
+    return () => cancelAnimationFrame(dvdAnimRef.current);
+  }, []);
+
   return (
     <div style={{ maxWidth: '700px', margin: '0 auto', padding: '20px' }}>
       <h2 style={{ textAlign: 'center', color: '#ff6b00', marginBottom: '16px' }}>Pepe&apos;s Contract Clicker</h2>
@@ -222,7 +278,7 @@ export const Games = () => {
               zIndex: 5,
             }}
           >
-            <span style={{ fontSize: '36px' }}>🍗</span>
+            <img src="content/images/pepes-logo.png" alt="pepes" style={{ width: '40px', height: '40px', objectFit: 'contain' }} />
             <span
               style={{
                 fontSize: '9px',
@@ -360,6 +416,47 @@ export const Games = () => {
             </button>
           </div>
         )}
+      </div>
+
+      {/* DVD BOUNCER */}
+      <div style={{ marginTop: '48px' }}>
+        <h2 style={{ textAlign: 'center', color: '#ff6b00', marginBottom: '4px' }}>🍗 Bouncing Pepe&apos;s Logo</h2>
+        <p style={{ textAlign: 'center', fontSize: '13px', color: '#aaa', marginBottom: '12px' }}>Wait for it to hit the corner...</p>
+        <div
+          id="dvd-container"
+          style={{
+            position: 'relative',
+            width: '100%',
+            height: '300px',
+            background: '#000',
+            borderRadius: '12px',
+            overflow: 'hidden',
+            border: '1px solid #ff6b00',
+          }}
+        >
+          <div id="dvd-logo" style={{ position: 'absolute', userSelect: 'none' }}>
+            <img src="content/images/pepes-logo.png" alt="pepes" style={{ width: '60px', height: '60px', objectFit: 'contain' }} />
+          </div>
+          <div
+            id="corner-flash"
+            style={{
+              position: 'absolute',
+              inset: 0,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              opacity: 0,
+              pointerEvents: 'none',
+              fontSize: '32px',
+              color: '#ff6b00',
+              fontWeight: 500,
+              transition: 'opacity 0.2s',
+              background: 'rgba(0,0,0,0.5)',
+            }}
+          >
+            IT HIT THE CORNER!! 🎉🍗
+          </div>
+        </div>
       </div>
 
       <style>{`

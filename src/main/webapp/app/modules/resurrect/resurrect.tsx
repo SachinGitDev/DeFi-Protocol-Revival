@@ -29,6 +29,8 @@ export const Resurrect = () => {
   const [misinfoLoading, setMisinfoLoading] = useState(false);
   const [loading, setLoading] = useState(true);
   const [fetchError, setFetchError] = useState<string | null>(null);
+  const [analysis, setAnalysis] = useState<{ oldScore: number; newScore: number; overallScore: number; rationale: string } | null>(null);
+  const [analysisLoading, setAnalysisLoading] = useState(false);
 
   const getSeverityColor = (severity: string) => {
     const s = severity?.toUpperCase();
@@ -74,6 +76,22 @@ export const Resurrect = () => {
             .replace(/_$/g, '\n');
         }
         setContractData(contractRes);
+        if (contractRes?.originalCode && contractRes?.resurrectedCode) {
+          setAnalysisLoading(true);
+          axios
+            .post(
+              '/api/analysis',
+              {
+                oldCode: contractRes.originalCode,
+                newCode: contractRes.resurrectedCode,
+                misinformationScore: 0, // will be updated once misinfo loads
+              },
+              { headers },
+            )
+            .then(res => setAnalysis(res.data))
+            .catch(() => setAnalysis(null))
+            .finally(() => setAnalysisLoading(false));
+        }
         setLoading(false);
 
         // Fetch misinformation analysis after contract loads
@@ -139,13 +157,71 @@ export const Resurrect = () => {
         <h1 className="display-4 font-weight-bold">{contractData?.name || 'Contract'} Resurrected</h1>
         <p className="lead text-muted">Vulnerabilities patched. Ready for deployment.</p>
       </div>
+      {/* OVERALL SCORE SECTION */}
+      <Row className="justify-content-center mt-5 mb-4">
+        <Col md="10">
+          <Card className="shadow-sm border-0" style={{ borderRadius: '15px' }}>
+            <CardBody className="p-4">
+              <h4 className="mb-4 border-bottom pb-2">Code Security Analysis</h4>
+
+              {analysisLoading && (
+                <div className="text-center py-4">
+                  <Spinner color="info" />
+                  <p className="text-muted mt-2">Analysing code security...</p>
+                </div>
+              )}
+
+              {!analysisLoading && !analysis && <p className="text-muted">No code analysis available.</p>}
+
+              {!analysisLoading && analysis && (
+                <>
+                  <div className="d-flex gap-4 mb-4 flex-wrap justify-content-center">
+                    {/* Old Score */}
+                    <div className="p-3 rounded text-white text-center" style={{ backgroundColor: '#dc3545', minWidth: '160px' }}>
+                      <div style={{ fontSize: '2.5rem', fontWeight: 'bold' }}>{analysis.oldScore}</div>
+                      <div style={{ fontSize: '13px' }}>Original Code Score</div>
+                    </div>
+
+                    {/* Arrow */}
+                    <div className="d-flex align-items-center" style={{ fontSize: '2rem', color: '#6c757d' }}>
+                      →
+                    </div>
+
+                    {/* New Score */}
+                    <div className="p-3 rounded text-white text-center" style={{ backgroundColor: '#28a745', minWidth: '160px' }}>
+                      <div style={{ fontSize: '2.5rem', fontWeight: 'bold' }}>{analysis.newScore}</div>
+                      <div style={{ fontSize: '13px' }}>Revived Code Score</div>
+                    </div>
+
+                    {/* Overall Score */}
+                    <div className="p-3 rounded text-white text-center" style={{ backgroundColor: '#007bff', minWidth: '160px' }}>
+                      <div style={{ fontSize: '2.5rem', fontWeight: 'bold' }}>{analysis.overallScore}</div>
+                      <div style={{ fontSize: '13px' }}>Overall Score</div>
+                    </div>
+                  </div>
+
+                  {/* Rationale */}
+                  {analysis.rationale && (
+                    <div className="p-3 rounded" style={{ backgroundColor: '#f8f9fa' }}>
+                      <strong style={{ fontSize: '13px', color: '#495057' }}>AI Rationale:</strong>
+                      <p className="mb-0 mt-1" style={{ fontSize: '13px', color: '#6c757d', lineHeight: '1.6' }}>
+                        {analysis.rationale}
+                      </p>
+                    </div>
+                  )}
+                </>
+              )}
+            </CardBody>
+          </Card>
+        </Col>
+      </Row>
 
       {/* MISINFORMATION SECTION */}
       <Row className="justify-content-center mb-5">
         <Col md="10">
           <Card className="shadow-sm border-0" style={{ borderRadius: '15px' }}>
             <CardBody className="p-4">
-              <h4 className="mb-3 border-bottom pb-2">📄 README Misinformation Analysis</h4>
+              <h4 className="mb-3 border-bottom pb-2">README Misinformation Analysis</h4>
 
               {misinfoLoading && (
                 <div className="text-center py-4">
@@ -203,10 +279,10 @@ export const Resurrect = () => {
                             </Badge>
                           </div>
                           <div className="mb-2 p-2 rounded" style={{ backgroundColor: '#fff3cd', fontSize: '13px' }}>
-                            <strong>❝ README Claims:</strong> {item.claim}
+                            <strong>README Claims:</strong> {item.claim}
                           </div>
                           <div className="p-2 rounded" style={{ backgroundColor: '#f8d7da', fontSize: '13px' }}>
-                            <strong>⚠ Reality:</strong> {item.reality}
+                            <strong>Reality:</strong> {item.reality}
                           </div>
                         </div>
                       ))}

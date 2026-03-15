@@ -76,7 +76,10 @@ public class DetectMisinformation {
                     }
                 ],
                 "overallRiskScore": <number 0-100, 100 being most dangerous>,
-                "overallRiskVerdict": "<SAFE | LOW RISK | MEDIUM RISK | HIGH RISK | CRITICAL>"
+                "overallRiskVerdict": "<SAFE | LOW RISK | MEDIUM RISK | HIGH RISK | CRITICAL>
+
+                do NOT include any emojis in the response.
+                "
             }
             """.formatted(readme, solContents);
 

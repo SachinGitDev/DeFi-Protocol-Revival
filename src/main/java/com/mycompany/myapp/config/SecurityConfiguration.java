@@ -59,6 +59,7 @@ public class SecurityConfiguration {
                 authz
                     .requestMatchers(HttpMethod.POST, "/api/scan-repository").permitAll() // ADD THIS LINE
                     .requestMatchers(HttpMethod.GET, "/api/smart-contracts/**").permitAll() // AND THIS FOR THE RESULTS
+                    .requestMatchers(HttpMethod.GET, "/api/vulnerabilities").permitAll()
                     .requestMatchers("/api/authenticate").permitAll()
                     .requestMatchers(mvc.pattern("/index.html"), mvc.pattern("/*.js"), mvc.pattern("/*.txt"), mvc.pattern("/*.json"), mvc.pattern("/*.map"), mvc.pattern("/*.css")).permitAll()
                     .requestMatchers(mvc.pattern("/*.ico"), mvc.pattern("/*.png"), mvc.pattern("/*.svg"), mvc.pattern("/*.webapp")).permitAll()

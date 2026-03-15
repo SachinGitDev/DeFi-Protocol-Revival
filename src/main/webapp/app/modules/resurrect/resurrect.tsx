@@ -1,16 +1,57 @@
 import React, { useState, useEffect } from 'react';
-import { Container, Row, Col, Spinner } from 'reactstrap';
+import { Container, Row, Col, Spinner, Badge, Card, CardBody } from 'reactstrap';
 import { useLocation } from 'react-router-dom';
 import axios from 'axios';
+
+interface MisinformationDetail {
+  claim: string;
+  reality: string;
+  severity: string;
+}
+
+interface MisinformationReport {
+  accuracyScore: number;
+  accuracyVerdict: string;
+  misinformationSummary: string;
+  misinformationDetails: MisinformationDetail[];
+  overallRiskScore: number;
+  overallRiskVerdict: string;
+}
 
 export const Resurrect = () => {
   const location = useLocation();
   const queryParams = new URLSearchParams(location.search);
   const contractId = queryParams.get('contractId') || queryParams.get('id') || 1001;
+  const repoUrl = queryParams.get('repo') || '';
 
   const [contractData, setContractData] = useState<any>(null);
+  const [misinfo, setMisinfo] = useState<MisinformationReport | null>(null);
+  const [misinfoLoading, setMisinfoLoading] = useState(false);
   const [loading, setLoading] = useState(true);
   const [fetchError, setFetchError] = useState<string | null>(null);
+
+  const getSeverityColor = (severity: string) => {
+    const s = severity?.toUpperCase();
+    if (s === 'CRITICAL' || s === 'HIGH') return '#dc3545';
+    if (s === 'MEDIUM') return '#fd7e14';
+    return '#6c757d';
+  };
+
+  const getSeverityBadge = (severity: string) => {
+    const s = severity?.toUpperCase();
+    if (s === 'CRITICAL') return 'danger';
+    if (s === 'HIGH') return 'warning';
+    if (s === 'MEDIUM') return 'info';
+    return 'secondary';
+  };
+
+  const getVerdictColor = (verdict: string) => {
+    const v = verdict?.toUpperCase();
+    if (v === 'FRAUDULENT' || v === 'CRITICAL') return '#dc3545';
+    if (v === 'MISLEADING' || v === 'HIGH RISK') return '#fd7e14';
+    if (v === 'LOW RISK' || v === 'MEDIUM RISK') return '#ffc107';
+    return '#28a745';
+  };
 
   useEffect(() => {
     const animationTimer = new Promise(resolve => setTimeout(resolve, 3000));
@@ -32,9 +73,34 @@ export const Resurrect = () => {
             .replace(/_(?=[^_])/g, '\n')
             .replace(/_$/g, '\n');
         }
-
         setContractData(contractRes);
         setLoading(false);
+
+        // Fetch misinformation analysis after contract loads
+        if (repoUrl) {
+          setMisinfoLoading(true);
+          axios
+            .get(`/api/analyse?repoUrl=${encodeURIComponent(repoUrl)}`)
+            .then(res => {
+              let data = res.data;
+              if (typeof data === 'string') {
+                // Strip code fences then replace _ newline delimiters
+                let cleaned = data.replace(/```json\n?|```/g, '').trim();
+                // The backend uses _ as newline delimiter - replace them
+                cleaned = cleaned.replace(/_/g, '\n');
+                try {
+                  data = JSON.parse(cleaned);
+                } catch {
+                  // If that fails, try without replacement
+                  const raw = data.replace(/```json\n?|```/g, '').trim();
+                  data = JSON.parse(raw);
+                }
+              }
+              setMisinfo(data);
+            })
+            .catch(() => setMisinfo(null))
+            .finally(() => setMisinfoLoading(false));
+        }
       })
       .catch(error => {
         console.error('Error fetching data:', error);
@@ -73,6 +139,85 @@ export const Resurrect = () => {
         <h1 className="display-4 font-weight-bold">{contractData?.name || 'Contract'} Resurrected</h1>
         <p className="lead text-muted">Vulnerabilities patched. Ready for deployment.</p>
       </div>
+
+      {/* MISINFORMATION SECTION */}
+      <Row className="justify-content-center mb-5">
+        <Col md="10">
+          <Card className="shadow-sm border-0" style={{ borderRadius: '15px' }}>
+            <CardBody className="p-4">
+              <h4 className="mb-3 border-bottom pb-2">📄 README Misinformation Analysis</h4>
+
+              {misinfoLoading && (
+                <div className="text-center py-4">
+                  <Spinner color="warning" />
+                  <p className="text-muted mt-2">Analysing README for misinformation...</p>
+                </div>
+              )}
+
+              {!misinfoLoading && !misinfo && repoUrl && <p className="text-muted">No misinformation analysis available.</p>}
+
+              {!misinfoLoading && !repoUrl && <p className="text-muted">No repository URL provided for analysis.</p>}
+
+              {!misinfoLoading && misinfo && (
+                <>
+                  {/* Score Row */}
+                  <div className="d-flex gap-4 mb-4 flex-wrap">
+                    <div
+                      className="p-3 rounded text-white text-center"
+                      style={{ backgroundColor: getVerdictColor(misinfo.accuracyVerdict), minWidth: '160px' }}
+                    >
+                      <div style={{ fontSize: '2rem', fontWeight: 'bold' }}>{misinfo.accuracyScore}/100</div>
+                      <div style={{ fontSize: '13px' }}>README Accuracy</div>
+                      <div style={{ fontSize: '12px', fontWeight: 'bold' }}>{misinfo.accuracyVerdict}</div>
+                    </div>
+                    <div
+                      className="p-3 rounded text-white text-center"
+                      style={{ backgroundColor: getVerdictColor(misinfo.overallRiskVerdict), minWidth: '160px' }}
+                    >
+                      <div style={{ fontSize: '2rem', fontWeight: 'bold' }}>{misinfo.overallRiskScore}/100</div>
+                      <div style={{ fontSize: '13px' }}>Overall Risk</div>
+                      <div style={{ fontSize: '12px', fontWeight: 'bold' }}>{misinfo.overallRiskVerdict}</div>
+                    </div>
+                    <div className="p-3 rounded flex-grow-1" style={{ backgroundColor: '#f8f9fa', minWidth: '200px' }}>
+                      <div style={{ fontSize: '13px', fontWeight: 'bold', color: '#495057', marginBottom: '4px' }}>Summary</div>
+                      <div style={{ fontSize: '13px', color: '#6c757d', lineHeight: '1.5' }}>{misinfo.misinformationSummary}</div>
+                    </div>
+                  </div>
+
+                  {/* Misinformation Details */}
+                  {misinfo.misinformationDetails?.length > 0 && (
+                    <>
+                      <h5 className="mb-3" style={{ color: '#495057' }}>
+                        Identified Misinformation ({misinfo.misinformationDetails.length})
+                      </h5>
+                      {misinfo.misinformationDetails.map((item, idx) => (
+                        <div
+                          key={idx}
+                          className="mb-3 p-3 border rounded"
+                          style={{ borderLeft: `4px solid ${getSeverityColor(item.severity)} !important`, backgroundColor: '#fff' }}
+                        >
+                          <div className="d-flex justify-content-between align-items-start mb-2">
+                            <span style={{ fontWeight: 'bold', fontSize: '13px', color: '#495057' }}>#{idx + 1} Claim</span>
+                            <Badge color={getSeverityBadge(item.severity)} style={{ fontSize: '11px', padding: '4px 8px' }}>
+                              {item.severity}
+                            </Badge>
+                          </div>
+                          <div className="mb-2 p-2 rounded" style={{ backgroundColor: '#fff3cd', fontSize: '13px' }}>
+                            <strong>❝ README Claims:</strong> {item.claim}
+                          </div>
+                          <div className="p-2 rounded" style={{ backgroundColor: '#f8d7da', fontSize: '13px' }}>
+                            <strong>⚠ Reality:</strong> {item.reality}
+                          </div>
+                        </div>
+                      ))}
+                    </>
+                  )}
+                </>
+              )}
+            </CardBody>
+          </Card>
+        </Col>
+      </Row>
 
       {/* CODE SPLIT SCREEN */}
       <Row>

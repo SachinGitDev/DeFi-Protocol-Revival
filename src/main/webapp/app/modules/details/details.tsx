@@ -73,7 +73,7 @@ export const Details = () => {
                   color="success"
                   size="lg"
                   style={{ borderRadius: '30px', padding: '15px 60px', fontWeight: 'bold', fontSize: '1.2rem' }}
-                  onClick={() => navigate(`/resurrect?id=${contractId}`)}
+                  onClick={() => navigate(`/resurrect?id=${contractId}&repo=${encodeURIComponent(repoUrl)}`)}
                 >
                   Generate Revived Code
                 </Button>

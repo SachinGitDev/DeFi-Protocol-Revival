@@ -57,6 +57,7 @@ public class SecurityConfiguration {
             .authorizeHttpRequests(authz ->
                 // prettier-ignore
                 authz
+                    .requestMatchers(HttpMethod.GET, "/api/analyse").permitAll()
                     .requestMatchers(HttpMethod.POST, "/api/scan-repository").permitAll() // ADD THIS LINE
                     .requestMatchers(HttpMethod.GET, "/api/smart-contracts/**").permitAll() // AND THIS FOR THE RESULTS
                     .requestMatchers(HttpMethod.GET, "/api/vulnerabilities").permitAll()

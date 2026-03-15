@@ -47,3 +47,11 @@ export const Home = () => (
     </NavLink>
   </NavItem>
 );
+
+export const GameLink = () => (
+  <NavItem>
+    <NavLink tag={Link} to="/games" className="d-flex align-items-center">
+      Game
+    </NavLink>
+  </NavItem>
+);

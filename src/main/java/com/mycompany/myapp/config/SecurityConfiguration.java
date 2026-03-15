@@ -57,6 +57,7 @@ public class SecurityConfiguration {
             .authorizeHttpRequests(authz ->
                 // prettier-ignore
                 authz
+                    .requestMatchers("/game", "/game/**").permitAll()
                     .requestMatchers(HttpMethod.GET, "/api/analyse").permitAll()
                     .requestMatchers("/api/analysis").permitAll()
                     .requestMatchers(HttpMethod.POST, "/api/scan-repository").permitAll() // ADD THIS LINE

@@ -1,5 +1,6 @@
 import React from 'react';
 import { Route } from 'react-router';
+import { Games } from 'app/modules/games/games';
 
 import Loadable from 'react-loadable';
 
@@ -36,6 +37,7 @@ const AppRoutes = () => {
     <div className="view-routes">
       <ErrorBoundaryRoutes>
         <Route index element={<Home />} />
+        <Route path="/games" element={<Games />} />
         <Route path="results" element={<Results />} />
         <Route path="details" element={<Details />} />
         <Route path="resurrect" element={<Resurrect />} />

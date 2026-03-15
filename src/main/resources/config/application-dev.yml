@@ -21,6 +21,13 @@ logging:
     com.mycompany.myapp: DEBUG
 
 spring:
+  ai:
+    google:
+      genai:
+        api-key: ${GEMINI_API_KEY}
+        chat:
+          options:
+            model: gemini-2.5-flash
   docker:
     compose:
       enabled: false
@@ -108,3 +115,11 @@ jhipster:
 # ===================================================================
 
 # application:
+
+# LLM configuration (reads key from environment variable GEMINI_API_KEY)
+llm:
+  api:
+    # default URL can be overridden via GEMINI_API_URL env var or application properties
+    url: ${GEMINI_API_URL:https://api.gemini.example/v1/generate}
+    # do NOT commit secrets — read from environment
+    key: ${GEMINI_API_KEY:}

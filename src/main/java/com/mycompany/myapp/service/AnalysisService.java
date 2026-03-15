@@ -7,9 +7,13 @@ import java.time.Instant;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.ThreadLocalRandom;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
+import org.springframework.web.reactive.function.client.WebClientResponseException;
 
 @Service
 public class AnalysisService {
@@ -120,12 +124,43 @@ public class AnalysisService {
                     }
                 }
             }
-            // No further fallback parsing to avoid accidental extraction of unrelated text
         } catch (Exception e) {
-            // parsing attempts failed — we return a fallback in the ParsedLlm object below
+            // parsing attempts failed — we'll attempt fallback heuristics below
         }
 
-        // If nothing parsed, return defaults (0/0/empty) so frontend gets a clean, predictable object
+        // Fallback 1: try to extract the first JSON object substring and parse it
+        try {
+            String candidate = extractFirstJsonObject(raw);
+            if (candidate != null) {
+                try {
+                    JsonNode data = objectMapper.readTree(candidate);
+                    out.oldScore = data.path("oldScore").asInt(out.oldScore);
+                    out.newScore = data.path("newScore").asInt(out.newScore);
+                    out.rationale = data.path("rationale").asText(out.rationale);
+                    return out;
+                } catch (Exception ignored) {
+                    // continue to looser heuristics
+                }
+            }
+        } catch (Exception ignored) {}
+
+        // Fallback 2: loose regex-based heuristic (look for "old score: X ... new score: Y")
+        try {
+            Pattern p = Pattern.compile("(?i)old\s*score\s*[:=]\s*(\\d{1,3}).*?new\s*score\s*[:=]\s*(\\d{1,3})", Pattern.DOTALL);
+            Matcher m = p.matcher(raw);
+            if (m.find()) {
+                try {
+                    out.oldScore = clamp(Integer.parseInt(m.group(1)));
+                    out.newScore = clamp(Integer.parseInt(m.group(2)));
+                    int idx = Math.max(0, m.start() - 200);
+                    int end = Math.min(raw.length(), m.end() + 200);
+                    out.rationale = sanitizedRationale(raw.substring(idx, end));
+                    return out;
+                } catch (Exception ignored) {}
+            }
+        } catch (Exception ignored) {}
+
+        // Last resort: return defaults (0/0/empty) so frontend gets a clean, predictable object
         return out;
     }
 
@@ -138,7 +173,20 @@ public class AnalysisService {
     }
 
     private String extractFirstJsonObject(String s) {
-        // Removed: no fallback extraction
+        if (s == null) return null;
+        int start = s.indexOf('{');
+        if (start < 0) return null;
+        int depth = 0;
+        for (int i = start; i < s.length(); i++) {
+            char c = s.charAt(i);
+            if (c == '{') depth++;
+            else if (c == '}') {
+                depth--;
+                if (depth == 0) {
+                    return s.substring(start, i + 1);
+                }
+            }
+        }
         return null;
     }
 
@@ -197,23 +245,56 @@ public class AnalysisService {
      * is converted to a small JSON error string so the caller can handle it.
      */
     private String callLlm(String prompt) {
-        try {
-            // Google Gemini Payload Structure
-            var payload = Map.of("contents", List.of(Map.of("parts", List.of(Map.of("text", prompt)))));
+        // Conservative retry/backoff for transient errors (429/503 etc.).
+        var payload = Map.of("contents", List.of(Map.of("parts", List.of(Map.of("text", prompt)))));
+        String fullUrl = llmApiUrl + "?key=" + llmApiKey;
+        int maxAttempts = 3;
+        long baseDelayMs = 1000L; // 1s base
 
-            // API Key must be in the URL for Google AI Studio
-            String fullUrl = llmApiUrl + "?key=" + llmApiKey;
-
-            return this.webClient.post()
-                .uri(fullUrl)
-                .header("Content-Type", "application/json")
-                .bodyValue(payload)
-                .retrieve()
-                .bodyToMono(String.class)
-                .block(Duration.ofSeconds(60));
-        } catch (Exception e) {
-            return "{\"error\":\"LLM call failed: " + e.getMessage().replace("\"", "'") + "\"}";
+        for (int attempt = 1; attempt <= maxAttempts; attempt++) {
+            try {
+                String resp =
+                    this.webClient.post()
+                        .uri(fullUrl)
+                        .header("Content-Type", "application/json")
+                        .bodyValue(payload)
+                        .retrieve()
+                        .bodyToMono(String.class)
+                        .block(Duration.ofSeconds(60));
+                return resp;
+            } catch (WebClientResponseException wex) {
+                int status = wex.getRawStatusCode();
+                if ((status == 429 || status == 503) && attempt < maxAttempts) {
+                    long jitter = ThreadLocalRandom.current().nextLong(200, 1000);
+                    long sleep = baseDelayMs * (1L << (attempt - 1)) + jitter;
+                    try {
+                        Thread.sleep(sleep);
+                    } catch (InterruptedException ie) {
+                        Thread.currentThread().interrupt();
+                        break;
+                    }
+                    continue;
+                }
+                String msg = wex.getResponseBodyAsString();
+                if (msg == null || msg.isBlank()) msg = wex.getMessage();
+                return "{\"error\":\"LLM call failed: " + msg.replace("\"", "'") + "\"}";
+            } catch (Exception e) {
+                if (attempt < maxAttempts) {
+                    long jitter = ThreadLocalRandom.current().nextLong(200, 1000);
+                    long sleep = baseDelayMs * (1L << (attempt - 1)) + jitter;
+                    try {
+                        Thread.sleep(sleep);
+                    } catch (InterruptedException ie) {
+                        Thread.currentThread().interrupt();
+                        break;
+                    }
+                    continue;
+                }
+                return "{\"error\":\"LLM call failed: " + e.getMessage().replace("\"", "'") + "\"}";
+            }
         }
+
+        return "{\"error\":\"LLM call failed: unknown\"}";
     }
 
     // Inner classes (Keep these as they were)

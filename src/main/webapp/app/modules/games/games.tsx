@@ -1,15 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 
-const CONTRACTS = [
-  'Reentrancy.sol',
-  'FlashLoan.sol',
-  'PonziRug.sol',
-  'OverflowDao.sol',
-  'ZombieToken.sol',
-  'DrainVault.sol',
-  'FakeAudit.sol',
-  'HoneypotDex.sol',
-];
+const CONTRACTS = ['ChickenRiceBox.sol', 'ChickenLoadedFries.sol', 'PiriPiriWings.sol', 'GarlicMayoDip.sol', 'Chips.sol'];
 
 interface Zombie {
   id: number;
@@ -29,7 +20,7 @@ export const Games = () => {
   const [zombies, setZombies] = useState<Zombie[]>([]);
   const [flashes, setFlashes] = useState<{ id: number; x: number; top: number }[]>([]);
   const [explosions, setExplosions] = useState<{ id: number; x: number; y: number }[]>([]);
-  const [levelBadge, setLevelBadge] = useState('Level 1 — Click the zombies!');
+  const [levelBadge, setLevelBadge] = useState('Level 1 — Click the pepes!');
 
   const scoreRef = useRef(0);
   const livesRef = useRef(3);
@@ -108,14 +99,14 @@ export const Games = () => {
     setZombies([]);
     setFlashes([]);
     setExplosions([]);
-    setLevelBadge('Level 1 — Click the zombies!');
+    setLevelBadge('Level 1 — Click the pepes!');
     setGameState('playing');
 
     spawnTimeoutRef.current = setTimeout(spawnZombie, 500);
     levelIntervalRef.current = setInterval(() => {
       levelRef.current += 1;
       setLevel(levelRef.current);
-      setLevelBadge(`Level ${levelRef.current} — faster zombies!`);
+      setLevelBadge(`Level ${levelRef.current} — faster pepes!`);
     }, 15000);
 
     animFrameRef.current = requestAnimationFrame(tick);
@@ -131,7 +122,7 @@ export const Games = () => {
     setTimeout(() => setFlashes(prev => prev.filter(f => f.id !== flashId)), 800);
 
     if (scoreRef.current % 10 === 0) {
-      setLevelBadge(`${scoreRef.current} contracts saved!`);
+      setLevelBadge(`${scoreRef.current} pepes saved!`);
     }
   }, []);
 
@@ -145,7 +136,7 @@ export const Games = () => {
 
   return (
     <div style={{ maxWidth: '700px', margin: '0 auto', padding: '20px' }}>
-      <h2 style={{ textAlign: 'center', color: '#7fff7f', marginBottom: '16px' }}>Zombie Contract Clicker</h2>
+      <h2 style={{ textAlign: 'center', color: '#ff6b00', marginBottom: '16px' }}>Pepe&apos;s Contract Clicker</h2>
 
       {/* HUD */}
       <div
@@ -161,7 +152,7 @@ export const Games = () => {
       >
         <div style={{ textAlign: 'center' }}>
           <div style={{ fontSize: '11px', color: '#aaa' }}>Resurrected</div>
-          <div style={{ fontSize: '20px', fontWeight: 500, color: '#7fff7f' }}>{score}</div>
+          <div style={{ fontSize: '20px', fontWeight: 500, color: '#ff6b00' }}>{score}</div>
         </div>
         <div style={{ textAlign: 'center' }}>
           <div style={{ fontSize: '11px', color: '#aaa' }}>Lives</div>
@@ -189,7 +180,7 @@ export const Games = () => {
           position: 'relative',
           width: '100%',
           height: '500px',
-          background: 'linear-gradient(180deg, #1a1a2e 0%, #16213e 100%)',
+          background: 'linear-gradient(180deg, #1a0a00 0%, #2e0f00 100%)',
           borderRadius: '12px',
           overflow: 'hidden',
           cursor: 'crosshair',
@@ -231,7 +222,7 @@ export const Games = () => {
               zIndex: 5,
             }}
           >
-            <span style={{ fontSize: '36px' }}>🧟</span>
+            <span style={{ fontSize: '36px' }}>🍗</span>
             <span
               style={{
                 fontSize: '9px',
@@ -275,7 +266,7 @@ export const Games = () => {
               zIndex: 10,
             }}
           >
-            +1 Resurrected!
+            +1 Served! 🍗
           </div>
         ))}
 
@@ -312,16 +303,17 @@ export const Games = () => {
               gap: '16px',
             }}
           >
-            <h2 style={{ color: '#7fff7f', fontSize: '22px', fontWeight: 500, margin: 0 }}>Zombie Contract Clicker</h2>
+            <h2 style={{ color: '#ff6b00', fontSize: '22px', fontWeight: 500, margin: 0 }}>Pepes Contract Clicker</h2>
             <p style={{ color: '#aaa', fontSize: '14px', margin: 0, textAlign: 'center', maxWidth: '300px' }}>
-              Zombie smart contracts are falling from the sky! Click them to resurrect them before they hit the ground and explode!
+              Pepes are counting on you! Save the pepes from the greedy decentralized finance contracts by clicking them before they hit the
+              ground and explode!
             </p>
             <button
               onClick={startGame}
               style={{
-                background: '#2d6a2d',
-                color: '#7fff7f',
-                border: '1px solid #4caf50',
+                background: '#8b1a00',
+                color: '#ff6b00',
+                border: '1px solid #ff6b00',
                 padding: '10px 32px',
                 borderRadius: '8px',
                 fontSize: '15px',

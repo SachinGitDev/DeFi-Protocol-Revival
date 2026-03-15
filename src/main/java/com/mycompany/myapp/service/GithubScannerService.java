@@ -35,11 +35,17 @@ public class GithubScannerService {
 
         try {
             // 1. Clean the URL and extract owner/repo
-            String cleanUrl = githubUrl.replace("https://github.com/", "").replace(".git", "");
+            String cleanUrl = githubUrl.replace("https://github.com/", "").replace(".git", "").trim();
+
+            // Handle trailing slash
+            if (cleanUrl.endsWith("/")) {
+                cleanUrl = cleanUrl.substring(0, cleanUrl.length() - 1);
+            }
+
+            // Only take first two parts (owner/repo) — ignore /tree/main etc.
             String[] parts = cleanUrl.split("/");
             String owner = parts[0];
             String repo = parts[1];
-
             // 2. Set up GitHub Authentication Headers
             HttpHeaders headers = new HttpHeaders();
             headers.set("Authorization", "Bearer " + githubToken);

@@ -1,6 +1,5 @@
 package com.mycompany.myapp.service;
 
-// add imports here
 import com.mycompany.myapp.domain.SmartContract;
 import com.mycompany.myapp.domain.Vulnerability;
 import com.mycompany.myapp.repository.SmartContractRepository;
@@ -29,42 +28,101 @@ public class AiRevivalService {
         this.vulnerabilityRepository = vulnerabilityRepository;
     }
 
-    // 1. Define the exact JSON structure we want Gemini to return
     public record RevivalResult(String resurrectedCode, List<VulnDetail> vulnerabilities) {}
 
     public record VulnDetail(String name, String description, String severity) {}
+
+    /**
+     * Sanitizes a raw JSON string from Gemini by escaping any literal newlines
+     * that appear inside JSON string values. Gemini sometimes returns real \n
+     * characters inside strings instead of the escaped \\n, which breaks Jackson.
+     */
+    private String sanitizeJson(String raw) {
+        if (raw == null) return null;
+
+        // Strip markdown code fences if Gemini wrapped the JSON in ```json ... ```
+        String cleaned = raw.trim();
+        if (cleaned.startsWith("```")) {
+            cleaned = cleaned.replaceAll("(?s)^```[a-zA-Z]*\\n?", "").replaceAll("```$", "").trim();
+        }
+
+        // Walk through the string character by character.
+        // Inside a JSON string value, replace literal newline/tab/carriage-return
+        // with their escaped equivalents so Jackson can parse correctly.
+        StringBuilder sb = new StringBuilder(cleaned.length());
+        boolean inString = false;
+        boolean escape = false;
+
+        for (int i = 0; i < cleaned.length(); i++) {
+            char c = cleaned.charAt(i);
+
+            if (escape) {
+                sb.append(c);
+                escape = false;
+                continue;
+            }
+
+            if (c == '\\') {
+                sb.append(c);
+                escape = true;
+                continue;
+            }
+
+            if (c == '"') {
+                inString = !inString;
+                sb.append(c);
+                continue;
+            }
+
+            if (inString) {
+                // Replace literal control characters with their JSON escape sequences
+                if (c == '\n') {
+                    sb.append("\\n");
+                } else if (c == '\r') {
+                    sb.append("\\r");
+                } else if (c == '\t') {
+                    sb.append("\\t");
+                } else {
+                    sb.append(c);
+                }
+            } else {
+                sb.append(c);
+            }
+        }
+
+        return sb.toString();
+    }
 
     public SmartContract resurrectContract(Long contractId) {
         SmartContract contract = smartContractRepository
             .findById(contractId)
             .orElseThrow(() -> new RuntimeException("Contract not found!"));
 
-        // 2. Setup the JSON Converter
         BeanOutputConverter<RevivalResult> converter = new BeanOutputConverter<>(RevivalResult.class);
 
-        // 3. The Upgraded Prompt (Injecting the JSON format instructions)
         String prompt =
             "You are an expert Web3 Security Auditor. " +
             "Review the following Solidity smart contract. " +
             "Identify any vulnerabilities (like reentrancy, overflow, etc) and rewrite the entire contract " +
             "using modern, secure Solidity 0.8.20 standards. " +
-            "You MUST output the result exactly in the requested JSON format.\n\n" +
+            "IMPORTANT: You MUST return valid JSON. All newlines inside string values MUST be escaped as \\n. " +
+            "Do NOT include literal newline characters inside JSON string values. " +
+            "Do NOT wrap your response in markdown code fences. Output raw JSON only.\n\n" +
             "Code:\n" +
             contract.getOriginalCode() +
             "\n\n" +
             converter.getFormat();
 
-        // 4. Send to Gemini
         String rawJson = chatClient.prompt().user(prompt).call().content();
 
-        // 5. Convert JSON string back to Java Records
-        RevivalResult result = converter.convert(rawJson);
+        // Sanitize before parsing to handle any literal newlines Gemini snuck in
+        String sanitizedJson = sanitizeJson(rawJson);
 
-        // 6. Save the new code
+        RevivalResult result = converter.convert(sanitizedJson);
+
         contract.setResurrectedCode(result.resurrectedCode());
         contract = smartContractRepository.save(contract);
 
-        // 7. Loop through the found vulnerabilities and save them to the database!
         if (result.vulnerabilities() != null) {
             for (VulnDetail v : result.vulnerabilities()) {
                 Vulnerability vuln = new Vulnerability();

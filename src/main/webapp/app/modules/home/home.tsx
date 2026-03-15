@@ -20,9 +20,13 @@ export const Home = () => {
 
     try {
       // 4. Send the URL to Sachin's Backend!
-      const response = await axios.post('/api/scan-repository', {
-        githubUrl,
-      });
+      const response = await axios.post(
+        '/api/scan-repository',
+        {
+          githubUrl,
+        },
+        { timeout: 600000 },
+      );
 
       // The backend returns a list of processed contracts. We grab the first one.
       const scannedContract = response.data[0];

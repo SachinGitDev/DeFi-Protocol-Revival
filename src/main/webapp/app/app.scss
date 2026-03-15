@@ -2,9 +2,15 @@
 @import 'bootstrap-variables';
 // Import Bootstrap source files from node_modules
 @import 'bootstrap/scss/bootstrap';
+
 body {
-  background: #fafafa;
   margin: 0;
+  min-height: 100vh;
+  background-image: url('/content/images/pepes2.jpg');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-attachment: fixed;
 }
 
 a {
@@ -21,17 +27,21 @@ a {
     box-sizing: border-box;
   }
 }
-
 .app-container {
   box-sizing: border-box;
+  background: transparent !important;
   .view-container {
     width: 100%;
     height: calc(100% - 40px);
     overflow-y: auto;
     overflow-x: hidden;
     padding: 1rem;
+    background: transparent !important;
+    background-color: transparent !important;
     .card {
       padding: 1rem;
+      background: rgba(255, 255, 255, 0.4) !important;
+      backdrop-filter: blur(5px);
     }
     .view-routes {
       height: 100%;
@@ -41,7 +51,15 @@ a {
     }
   }
 }
-
+#root,
+#app,
+main,
+.container,
+.container-fluid,
+.jh-card,
+.page-wrapper {
+  background: transparent !important;
+}
 .fullscreen {
   position: fixed;
   top: 100px;

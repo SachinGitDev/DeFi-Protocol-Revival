@@ -47,7 +47,7 @@ export const Home = () => {
   };
 
   return (
-    <div style={{ backgroundColor: '#ffffff', minHeight: '100vh', paddingTop: '40px', paddingBottom: '40px' }}>
+    <div style={{ backgroundColor: 'transparent', minHeight: '100vh', paddingTop: '40px', paddingBottom: '40px' }}>
       <Container className="text-center">
         {/* LOGO SECTION (I left Rahul's styles exactly as they were) */}
         <Row className="justify-content-center">
@@ -100,7 +100,7 @@ export const Home = () => {
         {/* INFO SECTION (Left exactly as Rahul wrote it) */}
         <Row className="justify-content-center">
           <Col md="8">
-            <Card className="text-left bg-light shadow-sm" style={{ borderRadius: '15px' }}>
+            <Card className="text-left shadow-sm" style={{ borderRadius: '15px', background: 'rgba(255,255,255,0.75)' }}>
               <CardBody>
                 <div className="mb-4 text-start">
                   <CardTitle tag="h4" className="font-weight-bold">
